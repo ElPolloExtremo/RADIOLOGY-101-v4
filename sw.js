@@ -1,5 +1,5 @@
-var CACHE = 'radiology101-v7';
-var ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-512-maskable.png', './bg-app.svg', './bg-splash.svg', './grp-cabeza.png', './grp-columna.png', './grp-torax.png', './grp-msup.png', './grp-pelvis.png', './grp-minf.png'];
+var CACHE = 'radiology101-v8';
+var ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-512-maskable.png', './bg-app.svg', './bg-splash.svg', './bg-app-dark.svg', './bg-splash-dark.svg', './grp-cabeza.png', './grp-columna.png', './grp-torax.png', './grp-msup.png', './grp-pelvis.png', './grp-minf.png'];
 self.addEventListener('install', function (e) {
   // cache: 'reload' evita guardar copias viejas que el navegador tenga en su caché HTTP
   e.waitUntil(caches.open(CACHE).then(function (c) {

@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#004F55">
 <meta name="color-scheme" content="dark">
 <meta name="mobile-web-app-capable" content="yes">
+<script>try { if (localStorage.getItem('r101-theme') === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); document.querySelector('meta[name=theme-color]').setAttribute('content', '#2B2B2B'); } } catch (e) {}</script>
 <title>Radiology 101</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
@@ -235,6 +236,41 @@ main { padding-block: 8px 120px; }
 @keyframes vt-out { to { opacity: 0; } }
 @keyframes vt-in { from { opacity: 0; transform: translateY(14px); } }
 @media (max-width: 360px) { .posimg { float: none; width: 100%; margin: 0 0 12px; } }
+
+/* ===== Modo oscuro: gris carbón con acentos ámbar ===== */
+.topr { display: flex; align-items: center; gap: 4px; }
+.themebtn { color: var(--fg); }
+html[data-theme="dark"] {
+  --bg: #2B2B2B; --bg-2: #353330; --line: #5A4A33; --card: #1F1F1F; --card-2: #2A2620;
+  --ink: #F3EEE6; --fg: #F3EEE6; --muted: #CDBB9F; --frame: #0E0E0E; --fab: #1F1F1F; --accent: #E5A84B;
+  --danger: #FFB0A3;
+}
+html[data-theme="dark"] .bgfix { background-image: url("bg-app-dark.svg"); }
+html[data-theme="dark"] .splash { background-image: url("bg-splash-dark.svg"); }
+html[data-theme="dark"] .themebtn { color: #F2B63A; }
+html[data-theme="dark"] .top, html[data-theme="dark"] .donebar { background: rgba(30, 28, 26, 0.84); }
+html[data-theme="dark"] .card, html[data-theme="dark"] .row-main, html[data-theme="dark"] .titlecard,
+html[data-theme="dark"] .tile, html[data-theme="dark"] .poscard, html[data-theme="dark"] .upl { border: 2px solid var(--accent); }
+html[data-theme="dark"] .card:active { background: var(--card-2); }
+html[data-theme="dark"] .card small, html[data-theme="dark"] .rs, html[data-theme="dark"] .titlecard .crumb,
+html[data-theme="dark"] .titlecard .lbl { color: var(--muted); }
+html[data-theme="dark"] .postext .lbl { color: var(--accent); }
+html[data-theme="dark"] .bar { background: rgba(255, 255, 255, 0.14); }
+html[data-theme="dark"] .bar i { background: var(--accent); }
+html[data-theme="dark"] .crit li::before { color: var(--accent); }
+html[data-theme="dark"] .critcard { background: #262626; border-color: #3A3631; }
+html[data-theme="dark"] .critcard h2 { color: var(--ink); }
+html[data-theme="dark"] .hero .tphoto { background: #262626; }
+html[data-theme="dark"] .posimg .tphoto { background: #2C2C2C; }
+html[data-theme="dark"] .posimg .tphoto .none, html[data-theme="dark"] .tphoto .none { color: var(--muted); }
+html[data-theme="dark"] .titlecard .cin { background: rgba(255, 255, 255, 0.08); color: var(--ink); }
+html[data-theme="dark"] .menu { border: 1px solid var(--accent); }
+html[data-theme="dark"] .menu button:hover { background: rgba(255, 255, 255, 0.08); }
+html[data-theme="dark"] .menu button.danger { color: #FF9C8F; }
+html[data-theme="dark"] .btn.primary { background: var(--accent); border-color: var(--accent); color: #1A1206; }
+html[data-theme="dark"] .fab { border-color: var(--accent); color: var(--accent); }
+html[data-theme="dark"] .toast { background: #F3EEE6; color: #1A1A1A; }
+html[data-theme="dark"] .gicon, html[data-theme="dark"] .gicon-head { filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.5)); }
 </style>
 </head>
 <body>
@@ -345,6 +381,7 @@ main { padding-block: 8px 120px; }
     quality: { title: 'Imágenes de apoyo', short: 'Calidad' }
   };
   var ICON = {
+    moon: '<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><path d="M17.6 3.2a10 10 0 1 0 5.2 13.4A8.2 8.2 0 0 1 17.6 3.2z" fill="currentColor"/></svg>',
     back: '<svg width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M26 15H5M13 7L5 15l8 8"/></svg>',
     dots: '<svg width="30" height="30" viewBox="0 0 30 30" fill="currentColor" aria-hidden="true"><circle cx="15" cy="6" r="2.6"/><circle cx="15" cy="15" r="2.6"/><circle cx="15" cy="24" r="2.6"/></svg>',
     upload: '<svg width="46" height="46" viewBox="0 0 46 46" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 31V9M13 18l10-10 10 10M6 32v6a2 2 0 002 2h30a2 2 0 002-2v-6"/></svg>',
@@ -597,10 +634,23 @@ main { padding-block: 8px 120px; }
     if (f.r) lab.push('imagen'); if (f.p) lab.push('posicionamiento'); if (f.q) lab.push('criterios');
     return '<span class="dots" role="img" aria-label="' + (lab.length ? 'Con contenido: ' + lab.join(', ') : 'Sin contenido') + '"><i class="' + (f.r ? 'on' : '') + '"></i><i class="' + (f.p ? 'on' : '') + '"></i><i class="' + (f.q ? 'on' : '') + '"></i></span>';
   }
+  /* Modo oscuro */
+  function isDark() { return document.documentElement.getAttribute('data-theme') === 'dark'; }
+  function setTheme(dark) {
+    var apply = function () {
+      if (dark) document.documentElement.setAttribute('data-theme', 'dark'); else document.documentElement.removeAttribute('data-theme');
+      var mt = document.querySelector('meta[name=theme-color]'); if (mt) mt.setAttribute('content', dark ? '#2B2B2B' : '#004F55');
+      renderTop();
+    };
+    try { localStorage.setItem('r101-theme', dark ? 'dark' : 'light'); } catch (e) {}
+    if (VT) { clearVT(); document.startViewTransition(apply); } else apply();
+  }
   function renderTop() {
     var h = '<div class="in">';
     h += view.v === 'home' ? '<span class="brandtxt">RADIOLOGY 101</span>' : '<button type="button" class="iconbtn" data-act="back" aria-label="Volver">' + ICON.back + '</button>';
-    h += edit ? '<span></span>' : '<button type="button" class="iconbtn" data-act="menu" aria-label="Más opciones" aria-haspopup="menu" aria-expanded="false">' + ICON.dots + '</button>';
+    var dark = isDark();
+    h += '<span class="topr"><button type="button" class="iconbtn themebtn" data-act="theme" aria-label="' + (dark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro') + '" aria-pressed="' + dark + '">' + ICON.moon + '</button>' +
+      (edit ? '' : '<button type="button" class="iconbtn" data-act="menu" aria-label="Más opciones" aria-haspopup="menu" aria-expanded="false">' + ICON.dots + '</button>') + '</span>';
     $('top').innerHTML = h + '</div>';
     $('warn').hidden = !!db;
   }
@@ -988,6 +1038,7 @@ main { padding-block: 8px 120px; }
   }
   var ACT = {
     'back': function () { up(); },
+    'theme': function () { hideMenu(); setTheme(!isDark()); },
     'menu': function (b) {
       var mn = $('menu');
       if (!mn.hidden) { hideMenu(); return; }
