@@ -192,17 +192,20 @@ main { padding-block: 8px 120px; }
 /* Ficha V4: título compacto, rayos X grande al centro, posicionamiento abajo, criterios al final */
 .titlecard.slim { padding: 12px 18px 14px; gap: 2px; margin-bottom: 18px; }
 .titlecard.slim h1 { font-size: clamp(24px, 7vw, 32px); }
-.hero { width: min(80%, 440px); margin: 0 auto; border-radius: 24px; display: flex; box-shadow: 0 10px 28px rgba(0, 20, 24, 0.35); }
-.hero .tphoto { aspect-ratio: 3 / 4; }
+.hero { width: 100%; margin: 0 auto; border-radius: 24px; display: flex; box-shadow: 0 10px 28px rgba(0, 20, 24, 0.35); }
+.hero .tphoto { max-height: 74vh; background: #003A40; }
+.hero .tphoto img { object-fit: contain; }
 .hero .tlabel { text-align: center; padding: 10px 14px 12px; }
-.herocap { width: min(80%, 440px); margin: 10px auto 0; color: var(--muted); font-size: 14px; text-align: center; }
-.poscard { margin-top: 22px; background: var(--card); color: var(--ink); border-radius: 22px; padding: 12px; display: grid; grid-template-columns: minmax(0, 46%) minmax(0, 1fr); gap: 14px; align-items: stretch; }
-.posimg { background: none; border: 0; padding: 0; cursor: pointer; display: block; width: 100%; height: 100%; border-radius: 16px; overflow: hidden; transition: transform 0.14s ease, filter 0.14s ease; }
-.posimg .tphoto { aspect-ratio: auto; height: 100%; min-height: 150px; background: #F4F8F8; border-radius: 16px; }
+.herocap { width: 100%; margin: 10px auto 0; color: var(--muted); font-size: 14px; text-align: center; }
+/* El texto rodea la imagen: queda a su lado y luego continúa a todo el ancho por debajo */
+.poscard { margin-top: 22px; background: var(--card); color: var(--ink); border-radius: 22px; padding: 12px; display: flow-root; }
+.posimg { float: left; width: 42%; margin: 0 12px 10px 0; background: none; border: 0; padding: 0; cursor: pointer; display: block; border-radius: 16px; overflow: hidden; transition: transform 0.14s ease, filter 0.14s ease; }
+.posimg .tphoto { aspect-ratio: 1 / 1; background: #F4F8F8; border-radius: 16px; }
+.posimg .tphoto img { object-fit: contain; }
 .posimg .tphoto .none { color: #5D7C7F; }
-.postext { min-width: 0; padding: 4px 4px 4px 0; }
-.postext h3 { font-size: 17px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
-.postext .tb { margin-top: 8px; }
+.postext { padding: 4px 4px 0 0; }
+.postext h3 { font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; text-wrap: wrap; -webkit-hyphens: auto; hyphens: auto; }
+.postext .tb { margin-top: 8px; display: block; }
 .postext .lbl { color: #123237; }
 .postext .txt { font-size: 14px; line-height: 1.45; }
 .phs { margin-top: 8px; font-size: 14px; opacity: 0.7; }
@@ -224,7 +227,7 @@ main { padding-block: 8px 120px; }
 ::view-transition-new(root) { animation: 0.3s ease-out 0.06s both vt-in; }
 @keyframes vt-out { to { opacity: 0; } }
 @keyframes vt-in { from { opacity: 0; transform: translateY(14px); } }
-@media (max-width: 360px) { .poscard { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 360px) { .posimg { float: none; width: 100%; margin: 0 0 12px; } }
 </style>
 </head>
 <body>
@@ -683,7 +686,9 @@ main { padding-block: 8px 120px; }
       /* Título compacto */
       h += '<div class="titlecard slim"><p class="crumb">' + esc(r.name) + '</p><h1>' + esc(p.name) + '</h1></div>';
       /* Imagen de rayos X grande y centrada */
-      h += '<button type="button" class="tile hero" data-act="open-detail" data-sec="result" data-i="0"><span class="tphoto">' +
+      /* El recuadro toma la forma de la imagen (sin recortarla); si es muy alta, se limita y los lados se rellenan */
+      var ar = rimg.length ? Math.max(rimg[0].w / rimg[0].h, 0.8) : 0.8;
+      h += '<button type="button" class="tile hero" data-act="open-detail" data-sec="result" data-i="0"><span class="tphoto" style="aspect-ratio:' + ar.toFixed(4) + '">' +
         (rimg.length ? imgTag(rimg[0], SECS.result.title) + (rimg.length > 1 ? '<span class="badge">' + rimg.length + '</span>' : '') : '<span class="none">' + ICON.img + 'Sin imagen de rayos X</span>') +
         '</span><span class="tlabel">' + SECS.result.title + '</span></button>';
       if (p.result.text.trim()) h += '<p class="herocap txt">' + esc(p.result.text) + '</p>';
@@ -882,6 +887,7 @@ main { padding-block: 8px 120px; }
           if (!P || !P.name) return;
           var p = findProj(r, P);
           if (!p) { p = mkProj(str(P.name, 100)); r.projs.push(p); }
+          else p.name = str(P.name, 100);
           if (P.result && typeof P.result.text === 'string') p.result.text = str(P.result.text, MAX_TXT);
           if (P.position && typeof P.position.patient === 'string') p.position.patient = str(P.position.patient, MAX_TXT);
           if (P.position && typeof P.position.tube === 'string') p.position.tube = str(P.position.tube, MAX_TXT);
@@ -1081,7 +1087,17 @@ main { padding-block: 8px 120px; }
     if (view.v !== 'home') { clearTimeout(splashTimer); hideSplash(); }
     try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
   });
-  if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); }); }
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function (r) { try { r.update(); } catch (e) {} }).catch(function () {});
+    });
+    /* Cuando llega una versión nueva, recarga una vez para mostrarla */
+    var hadCtrl = !!navigator.serviceWorker.controller, reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (!hadCtrl || reloaded) return; reloaded = true;
+      saveNow(); setTimeout(function () { location.reload(); }, 150);
+    });
+  }
 })();
 </script>
 </body>
