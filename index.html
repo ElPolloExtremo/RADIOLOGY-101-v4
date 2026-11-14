@@ -560,7 +560,7 @@ main { padding-block: 8px 120px; }
 
   /* ---------- Menú de tres puntos ---------- */
   function menuItems() {
-    if (view.v === 'home') return [['export', 'Exportar respaldo'], ['import', 'Importar respaldo'], ['info', 'Datos de la app']];
+    if (view.v === 'home') return [['texts', 'Actualizar textos (.json)'], ['export', 'Exportar respaldo'], ['import', 'Importar respaldo'], ['info', 'Datos de la app']];
     if (view.v === 'region') return [['r-edit', 'Renombrar región'], ['organize', 'Organizar proyecciones'], ['r-up', 'Mover región antes'], ['r-down', 'Mover región después'], ['r-del', 'Eliminar región', 1]];
     return [['edit-sheet', 'Editar contenido'], ['p-edit', 'Renombrar proyección'], ['p-del', 'Eliminar proyección', 1]];
   }
@@ -846,11 +846,59 @@ main { padding-block: 8px 120px; }
       toast('Respaldo listo. Revisa tus descargas.');
     }).catch(function () { toast('No se pudo generar el respaldo.'); });
   }
+  /* Actualización de textos: mezcla un .json de textos (type "textos") sin tocar las imágenes. */
+  function mergeTexts(j) {
+    var regs = Array.isArray(j.regions) ? j.regions.slice(0, 300) : [];
+    var findRegion = function (name) { var k = norm(String(name || '').trim()); for (var i = 0; i < data.regions.length; i++) if (norm(data.regions[i].name.trim()) === k) return data.regions[i]; return null; };
+    var findProj = function (r, P) {
+      if (!r) return null;
+      var names = [P.name].concat(Array.isArray(P.aliases) ? P.aliases : []).map(function (x) { return norm(String(x || '').trim()); });
+      for (var i = 0; i < r.projs.length; i++) if (names.indexOf(norm(r.projs[i].name.trim())) !== -1) return r.projs[i];
+      return null;
+    };
+    var nUpd = 0, nNew = 0, nReg = 0;
+    regs.forEach(function (R) {
+      if (!R || !R.name) return;
+      var r = findRegion(R.name);
+      if (!r) nReg++;
+      (Array.isArray(R.projs) ? R.projs : []).forEach(function (P) { if (P && P.name) { if (findProj(r, P)) nUpd++; else nNew++; } });
+    });
+    if (!nUpd && !nNew) { toast('El archivo no trae textos para cargar.'); return; }
+    dialog({
+      title: 'Actualizar textos',
+      text: 'Se actualizarán los textos de ' + plural(nUpd, 'proyección', 'proyecciones') + ' y se agregarán ' + plural(nNew, 'proyección nueva', 'proyecciones nuevas') + (nReg ? ' (' + plural(nReg, 'región nueva', 'regiones nuevas') + ')' : '') + '. Los textos que ya tengan esas proyecciones se reemplazarán. Las imágenes no se tocan.',
+      ok: 'Actualizar'
+    }).then(function (ok) {
+      if (!ok) return;
+      regs.forEach(function (R) {
+        if (!R || !R.name) return;
+        var r = findRegion(R.name);
+        if (!r) {
+          r = { id: uid(), name: str(R.name, 80), group: str(R.group, 80) || 'Otras', projs: [] };
+          var last = -1; data.regions.forEach(function (x, i) { if (x.group === r.group) last = i; });
+          if (last >= 0) data.regions.splice(last + 1, 0, r); else data.regions.push(r);
+        }
+        (Array.isArray(R.projs) ? R.projs : []).forEach(function (P) {
+          if (!P || !P.name) return;
+          var p = findProj(r, P);
+          if (!p) { p = mkProj(str(P.name, 100)); r.projs.push(p); }
+          if (P.result && typeof P.result.text === 'string') p.result.text = str(P.result.text, MAX_TXT);
+          if (P.position && typeof P.position.patient === 'string') p.position.patient = str(P.position.patient, MAX_TXT);
+          if (P.position && typeof P.position.tube === 'string') p.position.tube = str(P.position.tube, MAX_TXT);
+          if (P.quality && Array.isArray(P.quality.items)) p.quality.items = P.quality.items.slice(0, 80).map(function (x) { return str(x, 400); });
+        });
+      });
+      saveNow(); render();
+      toast('Textos actualizados: ' + nUpd + ' actualizadas, ' + nNew + ' nuevas.');
+    });
+  }
   function importFile(file) {
     var rd = new FileReader();
     rd.onload = function () {
       var j, nd;
-      try { j = JSON.parse(rd.result); if (!j || j.app !== 'radiology101' || !j.data) throw new Error('x'); nd = sanitize(j.data); }
+      try { j = JSON.parse(rd.result); } catch (e) { j = null; }
+      if (j && j.app === 'radiology101' && j.type === 'textos') { mergeTexts(j); return; }
+      try { if (!j || j.app !== 'radiology101' || !j.data) throw new Error('x'); nd = sanitize(j.data); }
       catch (e) { toast('El archivo no es un respaldo válido de Radiology 101.'); return; }
       var np = 0; nd.regions.forEach(function (r) { np += r.projs.length; });
       dialog({ title: 'Restaurar respaldo', text: 'Se reemplazará todo el contenido actual por el del respaldo (' + plural(nd.regions.length, 'región', 'regiones') + ', ' + plural(np, 'proyección', 'proyecciones') + '). Esto no se puede deshacer.', ok: 'Reemplazar', danger: true }).then(function (ok) {
@@ -923,6 +971,7 @@ main { padding-block: 8px 120px; }
     'open-detail': function (b) { openDetail(b.dataset.sec, +b.dataset.i); },
     'export': function () { exportAll(); },
     'import': function () { $('fImp').click(); },
+    'texts': function () { $('fImp').click(); },
     'info': function () {
       var np = 0, nf = 0; data.regions.forEach(function (r) { r.projs.forEach(function (p) { np++; if (anyFilled(p)) nf++; }); });
       dialog({ title: 'Radiology 101', text: plural(data.regions.length, 'región', 'regiones') + ', ' + plural(np, 'proyección', 'proyecciones') + ' (' + nf + ' con contenido) y ' + plural(allImgIds(data).length, 'imagen', 'imágenes') + ' guardadas en este dispositivo. Haz un respaldo de vez en cuando desde el menú.', ok: 'Cerrar', noCancel: true });
