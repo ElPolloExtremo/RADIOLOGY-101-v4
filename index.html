@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;700&display=swap">
 <style>
 /* Layout: fondo verde azulado, tarjetas de tono apagado con texto negro, cabecera con flecha y tres puntos, botón + flotante, barra LISTO en edición. */
 :root {
@@ -189,6 +189,13 @@ main { padding-block: 8px 120px; }
 .notecard h3 ~ h3 { margin-top: 20px; }
 .notecard .tb { margin-top: 10px; }
 
+/* Pantalla de divisiones */
+.gcard { position: relative; min-height: 158px; justify-content: flex-start; gap: 6px; overflow: hidden; }
+.gcard b { font-size: 21px; max-width: 100%; position: relative; z-index: 1; }
+.gcard small { position: relative; z-index: 1; display: block; line-height: 1.35; }
+.gicon { position: absolute; right: 8px; bottom: 8px; width: 47%; max-width: 96px; aspect-ratio: 1 / 1; object-fit: contain; pointer-events: none; filter: drop-shadow(0 3px 6px rgba(0, 30, 34, 0.25)); }
+.ghead { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
+.gicon-head { width: 84px; height: 84px; object-fit: contain; flex: none; filter: drop-shadow(0 4px 10px rgba(0, 20, 24, 0.4)); }
 /* Ficha V4: título compacto, rayos X grande al centro, posicionamiento abajo, criterios al final */
 .titlecard.slim { padding: 12px 18px 14px; gap: 2px; margin-bottom: 18px; }
 .titlecard.slim h1 { font-size: clamp(24px, 7vw, 32px); }
@@ -206,8 +213,8 @@ main { padding-block: 8px 120px; }
 .postext { padding: 4px 4px 0 0; }
 .postext h3 { font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; text-wrap: wrap; -webkit-hyphens: auto; hyphens: auto; }
 .postext .tb { margin-top: 8px; display: block; }
-.postext .lbl { color: #123237; }
-.postext .txt { font-size: 14px; line-height: 1.45; }
+.postext .lbl { color: #0B2A2E; font-weight: 700; font-size: 13px; }
+.postext .txt { font-size: 14px; line-height: 1.45; text-align: justify; -webkit-hyphens: auto; hyphens: auto; }
 .phs { margin-top: 8px; font-size: 14px; opacity: 0.7; }
 .critcard { margin-top: 22px; background: rgba(0, 40, 46, 0.55); border: 1px solid var(--line); border-radius: 22px; padding: 16px 18px 18px; }
 .critcard h2 { font-size: 18px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; text-align: center; margin-bottom: 6px; }
@@ -326,6 +333,12 @@ main { padding-block: 8px 120px; }
       ['Dedos del pie', ['Dedos del pie AP', 'Dedos del pie oblicua', 'Dedos del pie lateral']]
     ]]
   ];
+  /* Divisiones de la pantalla de inicio, en orden, con su ilustración */
+  var GROUPS = [['Cabeza y cuello', 'grp-cabeza.png'], ['Columna', 'grp-columna.png'], ['Tórax y abdomen', 'grp-torax.png'], ['Miembro superior', 'grp-msup.png'], ['Pelvis', 'grp-pelvis.png'], ['Miembro inferior', 'grp-minf.png']];
+  function groupFor(name, group) {
+    if (group === 'Pelvis y miembro inferior') return (name === 'Pelvis' || name === 'Cadera') ? 'Pelvis' : 'Miembro inferior';
+    return group;
+  }
   var SECS = {
     result: { title: 'Imagen de la proyección', short: 'Imagen' },
     position: { title: 'Posicionamiento y angulación', short: 'Posicionamiento' },
@@ -419,7 +432,7 @@ main { padding-block: 8px 120px; }
   function seedData() {
     var regs = [];
     SEED.forEach(function (g) {
-      g[1].forEach(function (r) { regs.push({ id: uid(), name: r[0], group: g[0], projs: r[1].map(mkProj) }); });
+      g[1].forEach(function (r) { regs.push({ id: uid(), name: r[0], group: groupFor(r[0], g[0]), projs: r[1].map(mkProj) }); });
     });
     return { regions: regs };
   }
@@ -434,7 +447,7 @@ main { padding-block: 8px 120px; }
     var regs = (d && Array.isArray(d.regions) ? d.regions : []).slice(0, 300).map(function (r) {
       r = r || {};
       return {
-        id: sid(r.id, seenR), name: str(r.name, 80) || 'Región', group: str(r.group, 80) || 'Otras',
+        id: sid(r.id, seenR), name: str(r.name, 80) || 'Región', group: groupFor(str(r.name, 80), str(r.group, 80)) || 'Otras',
         projs: (Array.isArray(r.projs) ? r.projs : []).slice(0, 300).map(function (p) {
           p = p || {};
           var rs = p.result || {}, po = p.position || {}, q = p.quality || {};
@@ -471,6 +484,7 @@ main { padding-block: 8px 120px; }
   function curR() { return findR(view.rid); }
   function curP() { return findP(findR(view.rid), view.pid); }
   function groups() { var s = {}; data.regions.forEach(function (r) { s[r.group] = 1; }); return Object.keys(s); }
+  function allGroups() { var out = GROUPS.map(function (g) { return g[0]; }); groups().forEach(function (g) { if (out.indexOf(g) === -1) out.push(g); }); return out; }
 
   /* ---------- Vista y navegación ---------- */
   var view = { v: 'home', d: 0 }, edit = false, query = '', canPush = true;
@@ -480,6 +494,7 @@ main { padding-block: 8px 120px; }
     var d = num(s.d, 0);
     if (s.v === 'region' && findR(s.rid)) return { v: 'region', rid: s.rid, d: d };
     if (s.v === 'sheet' && findP(findR(s.rid), s.pid)) return { v: 'sheet', rid: s.rid, pid: s.pid, d: d };
+    if (s.v === 'group' && typeof s.g === 'string' && s.g) return { v: 'group', g: s.g.slice(0, 80), d: d };
     if (s.v === 'home') return { v: 'home', d: d };
     return null;
   }
@@ -512,7 +527,11 @@ main { padding-block: 8px 120px; }
     try { history.replaceState(nv, ''); } catch (e) {}
     swap(null, back);
   }
-  function parentOf() { return view.v === 'sheet' ? { v: 'region', rid: view.rid } : { v: 'home' }; }
+  function parentOf() {
+    if (view.v === 'sheet') return { v: 'region', rid: view.rid };
+    if (view.v === 'region') { var r = curR(); return r ? { v: 'group', g: r.group } : { v: 'home' }; }
+    return { v: 'home' };
+  }
   function up() {
     if (canPush && view.d > 0) history.back();
     else show(parentOf());
@@ -563,7 +582,7 @@ main { padding-block: 8px 120px; }
 
   /* ---------- Menú de tres puntos ---------- */
   function menuItems() {
-    if (view.v === 'home') return [['texts', 'Actualizar textos (.json)'], ['export', 'Exportar respaldo'], ['import', 'Importar respaldo'], ['info', 'Datos de la app']];
+    if (view.v === 'home' || view.v === 'group') return [['texts', 'Actualizar textos (.json)'], ['export', 'Exportar respaldo'], ['import', 'Importar respaldo'], ['info', 'Datos de la app']];
     if (view.v === 'region') return [['r-edit', 'Renombrar región'], ['organize', 'Organizar proyecciones'], ['r-up', 'Mover región antes'], ['r-down', 'Mover región después'], ['r-del', 'Eliminar región', 1]];
     return [['edit-sheet', 'Editar contenido'], ['p-edit', 'Renombrar proyección'], ['p-del', 'Eliminar proyección', 1]];
   }
@@ -590,11 +609,12 @@ main { padding-block: 8px 120px; }
     renderTop();
     var m = $('view');
     if (view.v === 'home') renderHome(m);
+    else if (view.v === 'group') renderGroup(m);
     else if (view.v === 'region') renderRegion(m);
     else renderSheet(m);
     var fab = $('fab');
     fab.hidden = edit || view.v === 'sheet';
-    fab.setAttribute('aria-label', view.v === 'home' ? 'Agregar región' : 'Agregar proyección');
+    fab.setAttribute('aria-label', view.v === 'region' ? 'Agregar proyección' : 'Agregar región');
     $('donebar').hidden = !edit;
     if (anim) { m.classList.remove('enter'); void m.offsetWidth; m.classList.add('enter'); }
     hydrate(document); autosize();
@@ -617,24 +637,34 @@ main { padding-block: 8px 120px; }
         });
       });
       h = rows ? '<ul class="rows">' + rows + '</ul>' : '<p class="empty">Sin resultados para «' + esc(query.trim()) + '».</p>';
-    } else if (!data.regions.length) {
-      h = '<p class="empty">La libreta está vacía. Toca + para agregar la primera región.</p>';
     } else {
-      var gs = [], idx = {};
-      data.regions.forEach(function (r) {
-        if (!(r.group in idx)) { idx[r.group] = gs.length; gs.push({ name: r.group, items: [] }); }
-        gs[idx[r.group]].items.push(r);
+      h = '<div class="grid ggrid">';
+      allGroups().forEach(function (g) {
+        var regs = data.regions.filter(function (r) { return r.group === g; }), np = 0;
+        regs.forEach(function (r) { np += r.projs.length; });
+        var icon = null; GROUPS.forEach(function (x) { if (x[0] === g) icon = x[1]; });
+        h += '<button type="button" class="card gcard" data-act="open-group" data-g="' + esc(g) + '"><b>' + esc(g) + '</b><small>' + plural(regs.length, 'región', 'regiones') + '<br>' + np + ' proy.</small>' + (icon ? '<img class="gicon" src="' + icon + '" alt="">' : '') + '</button>';
       });
-      gs.forEach(function (g) {
-        h += '<section class="group"><h2>' + esc(g.name) + '<i>' + g.items.length + '</i></h2><div class="grid">';
-        g.items.forEach(function (r) {
-          var k = r.projs.filter(anyFilled).length, pct = r.projs.length ? Math.round(k / r.projs.length * 100) : 0;
-          h += '<button type="button" class="card" data-act="open-region" data-rid="' + r.id + '"><b>' + esc(r.name) + '</b><small>' + r.projs.length + ' proy.' + (k ? '<span class="bar" title="' + k + ' con contenido"><i style="width:' + pct + '%"></i></span>' : '') + '</small></button>';
-        });
-        h += '</div></section>';
-      });
+      h += '</div>';
     }
     el.innerHTML = h;
+  }
+
+  /* División: sus regiones */
+  function renderGroup(m) {
+    var regs = data.regions.filter(function (r) { return r.group === view.g; }), h = '';
+    var icon = null; GROUPS.forEach(function (x) { if (x[0] === view.g) icon = x[1]; });
+    h += '<div class="page-head ghead"><div><p class="crumb">División</p><h1>' + esc(view.g) + '</h1><p class="meta">' + plural(regs.length, 'región', 'regiones') + '</p></div>' + (icon ? '<img class="gicon-head" src="' + icon + '" alt="">' : '') + '</div>';
+    if (!regs.length) h += '<p class="empty">Aún no hay regiones en esta división. Toca + para agregar la primera.</p>';
+    else {
+      h += '<div class="grid">';
+      regs.forEach(function (r) {
+        var k = r.projs.filter(anyFilled).length, pct = r.projs.length ? Math.round(k / r.projs.length * 100) : 0;
+        h += '<button type="button" class="card" data-act="open-region" data-rid="' + r.id + '"><b>' + esc(r.name) + '</b><small>' + r.projs.length + ' proy.' + (k ? '<span class="bar" title="' + k + ' con contenido"><i style="width:' + pct + '%"></i></span>' : '') + '</small></button>';
+      });
+      h += '</div>';
+    }
+    m.innerHTML = h;
   }
 
   /* Región: proyecciones */
@@ -879,7 +909,7 @@ main { padding-block: 8px 120px; }
         if (!R || !R.name) return;
         var r = findRegion(R.name);
         if (!r) {
-          r = { id: uid(), name: str(R.name, 80), group: str(R.group, 80) || 'Otras', projs: [] };
+          r = { id: uid(), name: str(R.name, 80), group: groupFor(str(R.name, 80), str(R.group, 80)) || 'Otras', projs: [] };
           var last = -1; data.regions.forEach(function (x, i) { if (x.group === r.group) last = i; });
           if (last >= 0) data.regions.splice(last + 1, 0, r); else data.regions.push(r);
         }
@@ -931,8 +961,8 @@ main { padding-block: 8px 120px; }
     if (j < 0 || j >= data.regions.length) { toast(dir < 0 ? 'Ya es la primera de su apartado.' : 'Ya es la última de su apartado.'); return; }
     data.regions[i] = data.regions[j]; data.regions[j] = r; saveNow(); toast('Región movida.');
   }
-  function addRegion() {
-    dialog({ title: 'Nueva región', fields: [{ name: 'name', label: 'Nombre', required: true }, { name: 'group', label: 'Apartado (grupo)', value: 'Otras', list: groups() }], ok: 'Crear' }).then(function (v) {
+  function addRegion(g) {
+    dialog({ title: 'Nueva región', fields: [{ name: 'name', label: 'Nombre', required: true }, { name: 'group', label: 'División', value: g || 'Otras', list: allGroups() }], ok: 'Crear' }).then(function (v) {
       if (!v) return;
       var r = { id: uid(), name: v.name, group: v.group || 'Otras', projs: [] }, last = -1;
       data.regions.forEach(function (x, i) { if (x.group === r.group) last = i; });
@@ -965,7 +995,8 @@ main { padding-block: 8px 120px; }
       mn.hidden = false; b.setAttribute('aria-expanded', 'true');
       mn.querySelector('button').focus();
     },
-    'fab': function () { if (view.v === 'home') addRegion(); else if (view.v === 'region') addProj(); },
+    'fab': function () { if (view.v === 'home') addRegion(); else if (view.v === 'group') addRegion(view.g); else if (view.v === 'region') addProj(); },
+    'open-group': function (b) { go({ v: 'group', g: b.dataset.g }); },
     'done': function () {
       var p = view.v === 'sheet' ? curP() : null;
       if (p && !p.name.trim()) p.name = 'Proyección sin nombre';
@@ -984,7 +1015,7 @@ main { padding-block: 8px 120px; }
     },
     'r-edit': function () {
       var r = curR();
-      dialog({ title: 'Renombrar región', fields: [{ name: 'name', label: 'Nombre', value: r.name, required: true }, { name: 'group', label: 'Apartado (grupo)', value: r.group, list: groups() }], ok: 'Guardar' }).then(function (v) {
+      dialog({ title: 'Renombrar región', fields: [{ name: 'name', label: 'Nombre', value: r.name, required: true }, { name: 'group', label: 'División', value: r.group, list: allGroups() }], ok: 'Guardar' }).then(function (v) {
         if (!v) return; r.name = v.name; r.group = v.group || 'Otras'; saveNow(); render();
       });
     },
@@ -1028,7 +1059,7 @@ main { padding-block: 8px 120px; }
     'c-down': function (b) { if (move(curP().quality.items, +b.dataset.i, 1)) { saveNow(); render(); } },
     'c-del': function (b) { curP().quality.items.splice(+b.dataset.i, 1); saveNow(); render(); }
   };
-  var SLOW = { 'back': 1, 'fab': 1, 'done': 1, 'open-region': 1, 'open-proj': 1, 'open-detail': 1, 'edit-sheet': 1, 'organize': 1, 'p-edit': 1, 'r-edit': 1, 'export': 1, 'import': 1, 'info': 1 };
+  var SLOW = { 'open-group': 1, 'back': 1, 'fab': 1, 'done': 1, 'open-region': 1, 'open-proj': 1, 'open-detail': 1, 'edit-sheet': 1, 'organize': 1, 'p-edit': 1, 'r-edit': 1, 'export': 1, 'import': 1, 'info': 1 };
   var PRESS_MS = 170, navBusy = false;
   document.addEventListener('click', function (e) {
     var inMenu = e.target.closest('#menu'), isTog = e.target.closest('[data-act="menu"]');
