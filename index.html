@@ -309,7 +309,7 @@ html[data-theme="dark"] .gicon, html[data-theme="dark"] .gicon-head { filter: dr
 <div id="splash" class="splash" role="presentation">
   <img class="logo" src="icon-192.png" alt="">
   <h1>RADIOLOGY<br>101</h1>
-  <p>Toca para entrar</p>
+  <p id="appVersion">v 9.0.0</p>
 </div>
 
 <script>
@@ -1062,7 +1062,7 @@ html[data-theme="dark"] .gicon, html[data-theme="dark"] .gicon-head { filter: dr
     'texts': function () { $('fImp').click(); },
     'info': function () {
       var np = 0, nf = 0; data.regions.forEach(function (r) { r.projs.forEach(function (p) { np++; if (anyFilled(p)) nf++; }); });
-      dialog({ title: 'Radiology 101', text: plural(data.regions.length, 'región', 'regiones') + ', ' + plural(np, 'proyección', 'proyecciones') + ' (' + nf + ' con contenido) y ' + plural(allImgIds(data).length, 'imagen', 'imágenes') + ' guardadas en este dispositivo. Haz un respaldo de vez en cuando desde el menú.', ok: 'Cerrar', noCancel: true });
+      dialog({ title: 'Radiology 101 · v ' + APP_VERSION, text: plural(data.regions.length, 'región', 'regiones') + ', ' + plural(np, 'proyección', 'proyecciones') + ' (' + nf + ' con contenido) y ' + plural(allImgIds(data).length, 'imagen', 'imágenes') + ' guardadas en este dispositivo. Haz un respaldo de vez en cuando desde el menú.', ok: 'Cerrar', noCancel: true });
     },
     'r-edit': function () {
       var r = curR();
@@ -1147,6 +1147,9 @@ html[data-theme="dark"] .gicon, html[data-theme="dark"] .gicon-head { filter: dr
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') saveNow(); });
 
   /* ---------- Pantalla de inicio ---------- */
+  /* Versión de la app: se muestra en la pantalla de inicio. Debe coincidir con CACHE en sw.js */
+  var APP_VERSION = '9.0.0';
+  $('appVersion').textContent = 'v ' + APP_VERSION;
   var splashDone = false;
   function hideSplash() {
     if (splashDone) return; splashDone = true;
